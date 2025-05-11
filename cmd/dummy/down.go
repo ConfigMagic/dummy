@@ -13,7 +13,7 @@ var downCmd = &cobra.Command{
 	Use:   "down",
 	Short: "Остановить окружение",
 	Run: func(cmd *cobra.Command, args []string) {
-		mgr := environment.NewDockerComposeManager("config.yaml") // TODO: путь к конфигу сделать параметром
+		mgr := environment.NewDockerComposeManager(configPath)
 		err := mgr.Down(context.Background())
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Ошибка остановки окружения: %v\n", err)
@@ -25,4 +25,5 @@ var downCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(downCmd)
+	downCmd.PersistentFlags().StringVar(&configPath, "config", "config.yaml", "Путь к конфигурационному файлу")
 }

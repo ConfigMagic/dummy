@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var configPath string
+
 var rootCmd = &cobra.Command{
 	Use:   "dummy",
 	Short: "a one-click setup environment tool for developers",
@@ -33,6 +35,7 @@ func exitWithError(err error) {
 }
 
 func init() {
+	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "config.yaml", "Путь к конфигурационному файлу")
 	rootCmd.AddCommand(completionCmd)
 	// Добавляем новые команды
 	rootCmd.AddCommand(reloadCmd)

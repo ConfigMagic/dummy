@@ -1,0 +1,11 @@
+# Пример окружения на bash для разработчика
+runner: "bash"
+command: "bash start.sh"
+down_command: "bash stop.sh"
+files:
+  - template: "start.sh.tmpl"
+    output: "start.sh"
+  - template: "stop.sh.tmpl"
+    output: "stop.sh"
+env:
+  - MSG

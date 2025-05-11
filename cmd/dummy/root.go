@@ -47,7 +47,6 @@ func exitWithError(err error) {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "config.yaml", "Путь к конфигурационному файлу")
 	rootCmd.AddCommand(completionCmd)
-	// Добавляем новые команды
 	rootCmd.AddCommand(reloadCmd)
 	rootCmd.AddCommand(statusCmd)
 }

@@ -1,41 +1,41 @@
 # dummy
 
-## Setup and Running the Server
+## Установка и запуск сервера
 
-### Prerequisites
-Before you proceed, make sure you have Go installed and your environment is properly set up to build Go projects.
+### Зависимости
+Перед началом убедитесь, что у вас установлен Go и настроено окружение для сборки Go-проектов.
 
-### Step 1: Install the Binaries
+### Шаг 1: Установка бинарников
 
-Run the following commands to build and install the `dummy` and `dummy-admin` binaries:
+Выполните следующие команды для сборки и установки бинарников `dummy` и `dummy-admin`:
 
-1. Go to the `deploy` directory:
+1. Перейдите в директорию `deploy`:
     ```bash
     cd deploy
     ```
 
-2. Install the required tools:
+2. Установите необходимые инструменты:
     ```bash
     sudo make install
     ```
 
-    You should now see:
+    После этого вы увидите:
     ```
     ✅ Installed dummy and dummy-admin to /usr/local/bin.
     ```
 
-### Step 2: Run the Server with `dummy-admin`
+### Шаг 2: Запуск сервера через `dummy-admin`
 
-Once the installation is complete, you can use the `dummy-admin` tool to manage the server. To start the server:
+После установки вы можете использовать инструмент `dummy-admin` для управления сервером. Для запуска сервера:
 
-1. Run the `dummy-admin` tool:
+1. Запустите `dummy-admin`:
     ```bash
     dummy-admin
     ```
 
-    This will show the following output:
+    Вы увидите примерно такой вывод:
     ```
-    ... some long description ...
+    ... длинное описание ...
 
     Usage:
       dummy-admin [command]
@@ -50,39 +50,123 @@ Once the installation is complete, you can use the `dummy-admin` tool to manage 
     Flags:
       -h, --help   help for dummy-admin
 
-    Use "dummy-admin [command] --help" for more information about a command.
+    Use "dummy-admin [command] --help" for more информации о команде.
     ```
 
-2. To start the server, use the `new_server` command:
+2. Для запуска сервера используйте команду:
     ```bash
     sudo dummy-admin new_server
     ```
 
-    The output will show:
+    В выводе будет:
     ```
     Server started on port 50051
     ```
 
-## Environment Variables
+## Быстрый старт: запуск сервера через dummy
+
+Теперь вы можете поднять сервер с помощью утилиты `dummy` и минимального конфига. Это удобно для локального запуска сервера dummy в docker-контейнере.
+
+1. Перейдите в корень репозитория:
+    ```bash
+    cd /path/to/your/dummy
+    ```
+2. Запустите сервер через dummy:
+    ```bash
+    dummy up -c examples/server.yaml
+    ```
+
+Это поднимет сервер в контейнере с проброшенным портом 8080. Конфиг для запуска находится в `examples/server.yaml`.
+
+## Быстрый старт: минимальный вариант
+
+Для запуска серверной части достаточно указать только нужные переменные окружения:
+
+```bash
+export DUMMY_SERVER_URL="http://localhost:8080"
+export LOCAL_FILES="./local_data"
+# Запуск
+ dummy up -c examples/server.yaml
+```
+
+Всё остальное (пути, шаблоны, порты, docker-compose) dummy подхватит из дефолтных настроек внутри репозитория.
+
+## Как работает шаблон для сервера
+
+Для запуска серверной части dummy используется шаблон docker-compose, который лежит в `examples/server/docker-compose.tmpl`.
+
+- Админ может редактировать этот шаблон под свои нужды.
+- Разработчик указывает только переменные окружения в своём server.yaml (например, DUMMY_SERVER_URL, LOCAL_FILES).
+- dummy автоматически подставляет значения из env в шаблон и генерирует итоговый docker-compose.yaml.
+
+**Пример шаблона:**
+
+```yaml
+version: '3'
+services:
+  server:
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DUMMY_SERVER_URL={{ .DUMMY_SERVER_URL }}
+      - LOCAL_FILES={{ .LOCAL_FILES }}
+    command: ["/app/server"]
+    volumes:
+      - ../../server:/app
+```
+
+**Путь к шаблону:**
+- `examples/server/docker-compose.tmpl`
+
+**Путь к пользовательскому конфигу:**
+- `examples/server.yaml`
+
+## Переменные окружения
 
 ### DUMMY_SERVER_URL
 
-You can set the server address for all CLI commands using the `DUMMY_SERVER_URL` environment variable. If not set, the default is `http://localhost:8080`.
+Вы можете задать адрес сервера для всех CLI-команд через переменную окружения `DUMMY_SERVER_URL`. Если не указано, по умолчанию используется `http://localhost:8080`.
 
-Example usage:
+Пример использования:
 
 ```bash
 DUMMY_SERVER_URL="http://myserver:8080" dummy-admin push myconfig.yaml
 DUMMY_SERVER_URL="http://myserver:8080" dummy sync myconfig
 ```
 
-If `DUMMY_SERVER_URL` is not set, commands will use `http://localhost:8080` by default.
+Если `DUMMY_SERVER_URL` не задана, команды используют `http://localhost:8080` по умолчанию.
 
-### Final Notes
+### Примечания
 
-1. **Log Location**: The server logs are stored in `/var/log/dummy-admin/server.log`.
-2. **Log Format**: Logs are written in **JSON** format, which is more structured and useful for monitoring tools.
-
-3. **Running the Server**: You can start the server at any time using the `dummy-admin new_server` command. To stop the server, you will need to manually kill the process or implement a graceful shutdown mechanism.
+1. **Логи сервера**: Логи сервера хранятся в `/var/log/dummy-admin/server.log`.
+2. **Формат логов**: Логи пишутся в формате **JSON** — это удобно для мониторинга и анализа.
+3. **Запуск сервера**: Сервер можно запустить в любой момент через `dummy-admin new_server`. Для остановки сервера завершите процесс вручную или реализуйте graceful shutdown.
 
 Инструмент для автоматизации разработки локальных окружений.
+
+## Примеры для разработчиков: запуск окружений через dummy
+
+### Docker Compose (dev-docker)
+
+1. Пример конфига: `examples/dev-docker.yaml`
+2. Пример runner.yaml и шаблона: `examples/dev-docker/`
+
+Запуск:
+```bash
+dummy up -c examples/dev-docker.yaml
+dummy down -c examples/dev-docker.yaml
+```
+
+### Bash (dev-bash)
+
+1. Пример конфига: `examples/dev-bash.yaml`
+2. Пример runner.yaml и шаблонов: `examples/dev-bash/`
+
+Запуск:
+```bash
+dummy up -c examples/dev-bash.yaml
+dummy down -c examples/dev-bash.yaml
+```

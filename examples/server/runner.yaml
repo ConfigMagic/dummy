@@ -1,0 +1,10 @@
+# runner.yaml для server (универсальный запуск)
+runner: "docker compose"
+command: "docker compose -f docker-compose.yaml up -d"
+down_command: "docker compose -f docker-compose.yaml down"
+files:
+  - template: "docker-compose.tmpl"
+    output: "docker-compose.yaml"
+env:
+  - DUMMY_SERVER_URL
+  - LOCAL_FILES

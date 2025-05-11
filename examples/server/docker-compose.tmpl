@@ -1,0 +1,14 @@
+version: '3'
+services:
+  server:
+    build:
+      context: ../../server
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DUMMY_SERVER_URL={{ .DUMMY_SERVER_URL }}
+      - LOCAL_FILES={{ .LOCAL_FILES }}
+    command: ["/app/server"]
+    volumes:
+      - ../../server:/app

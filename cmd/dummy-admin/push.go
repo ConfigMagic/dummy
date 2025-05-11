@@ -1,11 +1,12 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"net/http"
+	"os"
+	"strings"
 
-	pb "github.com/ConfigMagic/dummy/server/pb"
 	"github.com/spf13/cobra"
 	"gopkg.in/yaml.v2"
 )
@@ -17,30 +18,30 @@ var pushCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		configPath := args[0]
 
-		// Чтение файла конфигурации
-		data, err := ioutil.ReadFile(configPath)
+		data, err := os.ReadFile(configPath)
 		if err != nil {
 			exitWithError(fmt.Errorf("ошибка чтения файла: %v", err))
 		}
 
-		// Парсинг YAML
-		var config pb.EnvConfig
+		var config struct {
+			Name string `yaml:"name"`
+			Data string `yaml:"data"`
+		}
 		if err := yaml.Unmarshal(data, &config); err != nil {
 			exitWithError(fmt.Errorf("ошибка парсинга YAML: %v", err))
 		}
 
-		// Подключение к серверу
-		client, err := NewGRPCAdminClient("localhost:50051")
+		url := "http://localhost:8080/config"
+		jsonData := fmt.Sprintf(`{"name":"%s","data":%q}`, config.Name, config.Data)
+		resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
 		if err != nil {
-			exitWithError(err)
+			exitWithError(fmt.Errorf("ошибка отправки POST: %v", err))
 		}
-		defer client.Close()
+		defer resp.Body.Close()
 
-		// Отправка конфига на сервер
-		ctx := context.Background()
-		_, err = client.ApplyConfig(ctx, &config)
-		if err != nil {
-			exitWithError(fmt.Errorf("ошибка применения конфига: %v", err))
+		if resp.StatusCode != 200 {
+			body, _ := io.ReadAll(resp.Body)
+			exitWithError(fmt.Errorf("сервер вернул ошибку: %s", string(body)))
 		}
 
 		fmt.Printf("✅ Конфиг '%s' успешно загружен на сервер\n", config.Name)

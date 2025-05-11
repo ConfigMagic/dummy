@@ -1,13 +1,26 @@
 package main
 
 import (
-	"context"
+	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
+	"net/http"
+	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
+
+func indentYaml(data string) string {
+	if data == "" {
+		return ""
+	}
+	lines := strings.Split(data, "\n")
+	for i, line := range lines {
+		lines[i] = "  " + line
+	}
+	return strings.Join(lines, "\n")
+}
 
 var syncCmd = &cobra.Command{
 	Use:   "sync [название_конфига]",
@@ -15,26 +28,32 @@ var syncCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		configName := args[0]
-		client, err := NewGRPCClient("localhost:50051")
+		url := fmt.Sprintf("http://localhost:8080/config/%s", configName)
+		resp, err := http.Get(url)
 		if err != nil {
-			exitWithError(err)
+			exitWithError(fmt.Errorf("ошибка запроса к серверу: %v", err))
 		}
-		defer client.Close()
+		defer resp.Body.Close()
 
-		ctx := context.Background()
-		config, err := client.GetConfig(ctx, configName)
-		if err != nil {
-			exitWithError(fmt.Errorf("ошибка получения конфига: %v", err))
+		if resp.StatusCode != 200 {
+			body, _ := io.ReadAll(resp.Body)
+			exitWithError(fmt.Errorf("сервер вернул ошибку: %s", string(body)))
 		}
 
-		// Сохранить конфиг в YAML
-		configBytes, _ := yaml.Marshal(config)
+		var result struct {
+			Data string `json:"data"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+			exitWithError(fmt.Errorf("ошибка декодирования ответа: %v", err))
+		}
+
+		configYaml := fmt.Sprintf("data: |\n%s\n", indentYaml(result.Data))
 		filename := fmt.Sprintf("%s.yaml", configName)
-		if err := ioutil.WriteFile(filename, configBytes, 0644); err != nil {
+		if err := os.WriteFile(filename, []byte(configYaml), 0644); err != nil {
 			exitWithError(fmt.Errorf("ошибка сохранения конфига: %v", err))
 		}
 
-		fmt.Printf("✅ Конфиг '%s' загружен\n", config.Name)
+		fmt.Printf("✅ Конфиг '%s' загружен\n", configName)
 		fmt.Printf("Конфиг сохранён в файл: %s\n", filename)
 	},
 }

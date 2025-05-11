@@ -33,7 +33,7 @@ func main() {
 
 	// Роуты
 	r.GET("/config/:name", configHandler.GetConfig)
-	r.POST("/config", configHandler.SaveConfig)
+	r.POST("/config/:name", configHandler.SaveConfig)
 	r.DELETE("/config/:name", configHandler.DeleteConfig)
 
 	// Запуск сервера

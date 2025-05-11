@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"os"
 
-	"github.com/ConfigMagic/dummy/internal/environment"
 	"github.com/spf13/cobra"
 )
 
@@ -16,14 +14,8 @@ var statusCmd = &cobra.Command{
 
 Удобно для быстрой диагностики и контроля состояния среды.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		mgr := environment.NewDockerComposeManager(configPath)
-		status, err := mgr.Status(context.Background())
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "Ошибка получения статуса: %v\n", err)
-			os.Exit(1)
-		}
-		fmt.Println("Статус окружения:")
-		fmt.Println(status)
+		fmt.Fprintln(os.Stderr, "Команда reload пока не поддерживается в универсальном runner.")
+		os.Exit(1)
 	},
 }
 

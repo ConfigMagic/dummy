@@ -27,12 +27,19 @@ func (h *ConfigHandler) GetConfig(c *gin.Context) {
 }
 
 func (h *ConfigHandler) SaveConfig(c *gin.Context) {
+	name := c.Param("name")
+	if name == "" {
+		h.Logger.Error("Name is required in URL")
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Name is required in URL"})
+		return
+	}
 	var config db.Config
 	if err := c.BindJSON(&config); err != nil {
 		h.Logger.Error("Invalid input", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid input"})
 		return
 	}
+	config.Name = name
 	_, err := h.DB.ConfigCollection.InsertOne(c, config)
 	if err != nil {
 		h.Logger.Error("Failed to save config", zap.Error(err))

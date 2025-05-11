@@ -13,7 +13,7 @@ import (
 
 var pushCmd = &cobra.Command{
 	Use:   "push [config-file]",
-	Short: "Publish configuration to the server",
+	Short: "Publish configuration to the server (server address can be set via DUMMY_SERVER_URL)",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		configPath := args[0]
@@ -31,7 +31,12 @@ var pushCmd = &cobra.Command{
 			exitWithError(fmt.Errorf("ошибка парсинга YAML: %v", err))
 		}
 
-		url := "http://localhost:8080/config"
+		serverURL := os.Getenv("DUMMY_SERVER_URL")
+		if serverURL == "" {
+			serverURL = "http://localhost:8080"
+		}
+
+		url := serverURL + "/config"
 		jsonData := fmt.Sprintf(`{"name":"%s","data":%q}`, config.Name, config.Data)
 		resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
 		if err != nil {

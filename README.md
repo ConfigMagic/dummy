@@ -63,6 +63,20 @@ Once the installation is complete, you can use the `dummy-admin` tool to manage 
     Server started on port 50051
     ```
 
+## Environment Variables
+
+### DUMMY_SERVER_URL
+
+You can set the server address for all CLI commands using the `DUMMY_SERVER_URL` environment variable. If not set, the default is `http://localhost:8080`.
+
+Example usage:
+
+```bash
+DUMMY_SERVER_URL="http://myserver:8080" dummy-admin push myconfig.yaml
+DUMMY_SERVER_URL="http://myserver:8080" dummy sync myconfig
+```
+
+If `DUMMY_SERVER_URL` is not set, commands will use `http://localhost:8080` by default.
 
 ### Final Notes
 

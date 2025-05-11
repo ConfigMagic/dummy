@@ -1,0 +1,1 @@
+/Users/kirillsozinov/Repos/dummy/server/cmd/app/main.go

@@ -1,14 +1,15 @@
 package main
 
 import (
-	"config_saver/internal/config"
-	"config_saver/internal/db"
-	"config_saver/internal/handler"
-	"config_saver/internal/logger"
 	"context"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
+
+	"config_saver/internal/config"
+	"config_saver/internal/db"
+	"config_saver/internal/handler"
+	"config_saver/internal/logger"
 )
 
 func main() {

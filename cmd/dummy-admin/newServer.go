@@ -25,15 +25,30 @@ var newServerCmd = &cobra.Command{
 			fmt.Println("Error starting the server:", err)
 			os.Exit(1)
 		}
-		fmt.Println("Server started on port", port)
 	},
 }
 
 func newServerServer(port string) error {
-	cmd := exec.Command("go", "run", "./server/main/main.go", "--port", port)
+	// Сначала проверим, что все зависимости установлены
+	cmd := exec.Command("go", "mod", "tidy")
+	cmd.Dir = "./server"
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	return cmd.Start()
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to update dependencies: %v", err)
+	}
+
+	// Теперь запустим сервер
+	cmd = exec.Command("go", "run", "cmd/app/main.go")
+	cmd.Dir = "./server"
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Start(); err != nil {
+		return fmt.Errorf("failed to start server: %v", err)
+	}
+
+	fmt.Println("Server started on port", port)
+	return nil
 }
 
 func init() {

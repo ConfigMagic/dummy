@@ -62,6 +62,5 @@ var upCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVar(&configPath, "config", "config.yaml", "Path to the configuration file")
 	rootCmd.AddCommand(upCmd)
 }

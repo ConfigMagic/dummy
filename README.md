@@ -28,33 +28,23 @@
 
 После установки вы можете использовать инструмент `dummy-admin` для управления сервером. Для запуска сервера:
 
-1. Запустите `dummy-admin`:
+1. Перейдите в корневую директорию проекта:
     ```bash
-    dummy-admin
+    cd /path/to/your/dummy
     ```
 
-    Вы увидите примерно такой вывод:
-    ```
-    ... длинное описание ...
-
-    Usage:
-      dummy-admin [command]
-
-    Available Commands:
-      completion  Generate shell completion script
-      help        Help about any command
-      new_server  Create the dummy's server
-      push        Publish configuration to the server
-      users       Manage users
-
-    Flags:
-      -h, --help   help for dummy-admin
-
-    Use "dummy-admin [command] --help" for more информации о команде.
-    ```
-
-2. Для запуска сервера используйте команду:
+2. Обновите зависимости Go:
     ```bash
+    cd server
+    go mod tidy
+    cd ..
+    ```
+
+3. Запустите сервер:
+    ```bash
+    export MONGO_URI="mongodb://localhost:27017"
+    export MONGO_DB="dummy"
+    export MONGO_CONFIGS_COLLECTION="configs"
     sudo dummy-admin new_server
     ```
 
@@ -63,33 +53,33 @@
     Server started on port 50051
     ```
 
-## Быстрый старт: запуск сервера через dummy
+### Возможные проблемы и их решения
 
-Теперь вы можете поднять сервер с помощью утилиты `dummy` и минимального конфига. Это удобно для локального запуска сервера dummy в docker-контейнере.
+1. **Ошибка "no such file or directory"**:
+   Если вы видите ошибку вида:
+   ```
+   stat ./server/main/main.go: no such file or directory
+   ```
+   Это означает, что вы находитесь не в той директории. Убедитесь, что вы запускаете команду из корневой директории проекта.
 
-1. Перейдите в корень репозитория:
-    ```bash
-    cd /path/to/your/dummy
-    ```
-2. Запустите сервер через dummy:
-    ```bash
-    dummy up -c examples/server.yaml
-    ```
+2. **Ошибки с пакетами Go**:
+   Если вы видите ошибки вида:
+   ```
+   package config_saver/internal/config is not in std
+   no required module provides package github.com/gin-gonic/gin
+   ```
+   Выполните следующие шаги:
+   ```bash
+   cd server
+   go mod tidy
+   cd ..
+   ```
+   Затем попробуйте запустить сервер снова.
 
-Это поднимет сервер в контейнере с проброшенным портом 8080. Конфиг для запуска находится в `examples/server.yaml`.
-
-## Быстрый старт: минимальный вариант
-
-Для запуска серверной части достаточно указать только нужные переменные окружения:
-
-```bash
-export DUMMY_SERVER_URL="http://localhost:8080"
-export LOCAL_FILES="./local_data"
-# Запуск
- dummy up -c examples/server.yaml
-```
-
-Всё остальное (пути, шаблоны, порты, docker-compose) dummy подхватит из дефолтных настроек внутри репозитория.
+3. **Проблемы с правами доступа**:
+   Если возникают проблемы с правами доступа, убедитесь, что:
+   - Вы используете `sudo` для команд, требующих повышенных привилегий
+   - У вас есть права на запись в директорию проекта
 
 ## Как работает шаблон для сервера
 
@@ -169,4 +159,28 @@ dummy down -c examples/dev-docker.yaml
 ```bash
 dummy up -c examples/dev-bash.yaml
 dummy down -c examples/dev-bash.yaml
+```
+
+### Сервер использует следующие переменные окружения:
+
+- `SERVER_PORT` - порт для запуска сервера (по умолчанию 50051)
+- `MONGO_URI` - URI для подключения к MongoDB (по умолчанию mongodb://localhost:27017)
+- `MONGO_DB` - имя базы данных MongoDB (по умолчанию dummy)
+- `MONGO_CONFIGS_COLLECTION` - имя коллекции для конфигураций (по умолчанию configs)
+
+### Логи
+
+Логи сервера сохраняются в следующих местах:
+- Файл: `/var/log/dummy-admin/server.log`
+- Консоль: вывод в stdout
+
+Формат логов: JSON для файла, читаемый текст для консоли.
+
+## Новый способ запуска сервера
+
+Теперь вы можете использовать docker-compose для запуска сервера.
+
+Запуск:
+```bash
+dummy up -c examples/server.yaml
 ```

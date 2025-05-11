@@ -24,8 +24,11 @@ func indentYaml(data string) string {
 
 var syncCmd = &cobra.Command{
 	Use:   "sync [название_конфига]",
-	Short: "Синхронизировать конфигурацию с сервером (адрес сервера можно задать через переменную окружения DUMMY_SERVER_URL)",
-	Args:  cobra.ExactArgs(1),
+	Short: "Синхронизировать конфиг с сервером (адрес через DUMMY_SERVER_URL)",
+	Long: `Получить или обновить локальный конфиг из централизованного хранилища.
+
+Позволяет держать конфиги в актуальном состоянии для всех разработчиков.`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		configName := args[0]
 

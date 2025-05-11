@@ -9,22 +9,30 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "dummy-admin",
-	Short: "a one-click setup environment tool for administrators",
-	Long:  "... some long description ...",
+	Short: "Быстрое администрирование и централизованное управление окружениями (one-click setup)",
+	Long: `dummy-admin — инструмент для администраторов и DevOps-инженеров для централизованного управления конфигурациями, пользователями и сервисами.
+
+Основные возможности:
+- Публикация и обновление конфигов для разработчиков
+- Управление пользователями и доступами
+- Интеграция с сервером и централизованным хранилищем
+- Генерация скриптов автодополнения для shell
+
+Упрощает поддержку, ускоряет распространение изменений и снижает количество ручных операций при администрировании окружений.`,
 }
 
 var completionCmd = &cobra.Command{
 	Use:   "completion",
-	Short: "Generate shell completion script",
-	Long: `Generate shell autocompletion script.
+	Short: "Сгенерировать скрипт автодополнения для shell (bash/zsh)",
+	Long: `Автодополнение команд dummy-admin для удобства администрирования.
 
 Supported shells:
   - bash
   - zsh
 
 Usage:
-  dummy completion bash > completions/dummy.bash
-  dummy completion zsh > completions/_dummy`,
+  dummy-admin completion bash > completions/dummy-admin.bash
+  dummy-admin completion zsh > completions/_dummy-admin`,
 	Args: cobra.ExactArgs(1), // только один аргумент: shell
 	RunE: func(cmd *cobra.Command, args []string) error {
 		shell := args[0]

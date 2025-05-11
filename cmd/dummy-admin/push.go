@@ -13,8 +13,11 @@ import (
 
 var pushCmd = &cobra.Command{
 	Use:   "push [config-file]",
-	Short: "Publish configuration to the server (server address can be set via DUMMY_SERVER_URL)",
-	Args:  cobra.ExactArgs(1),
+	Short: "Опубликовать конфигурацию на сервер (адрес через DUMMY_SERVER_URL)",
+	Long: `Загружает или обновляет конфиг окружения на централизованном сервере для всех разработчиков.
+
+Позволяет быстро распространять актуальные настройки и автоматизировать delivery конфигов. Сервер задаётся через переменную окружения DUMMY_SERVER_URL.`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		configPath := args[0]
 

@@ -12,6 +12,9 @@ import (
 var reloadCmd = &cobra.Command{
 	Use:   "reload",
 	Short: "Динамически обновить окружение (без полного пересоздания)",
+	Long: `Применяет изменения в конфиге или сервисах без полной остановки окружения.
+
+Позволяет быстро обновлять сервисы и настройки на лету.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		mgr := environment.NewDockerComposeManager(configPath)
 		err := mgr.Reload(context.Background())

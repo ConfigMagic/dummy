@@ -10,8 +10,11 @@ import (
 
 var composeCmd = &cobra.Command{
 	Use:   "generate [название_конфига]",
-	Short: "Сгенерировать docker-compose.yaml из конфига",
-	Args:  cobra.ExactArgs(1),
+	Short: "Сгенерировать docker-compose.yaml из выбранного конфига",
+	Long: `Автоматически собирает docker-compose файл для ручного запуска или отладки сервисов.
+
+Удобно для интеграции с существующими инструментами и CI/CD.`,
+	Args: cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
 		configName := args[0]
 		configBytes, err := ioutil.ReadFile(fmt.Sprintf("%s.yaml", configName))

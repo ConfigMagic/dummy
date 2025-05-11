@@ -11,7 +11,10 @@ import (
 
 var downCmd = &cobra.Command{
 	Use:   "down",
-	Short: "Остановить окружение",
+	Short: "Остановить окружение и освободить ресурсы",
+	Long: `Полностью выключает все сервисы, поднятые через dummy, и освобождает ресурсы.
+
+Удобно для завершения работы или очистки среды.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		mgr := environment.NewDockerComposeManager(configPath)
 		err := mgr.Down(context.Background())

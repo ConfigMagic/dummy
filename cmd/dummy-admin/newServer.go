@@ -10,8 +10,10 @@ import (
 
 var newServerCmd = &cobra.Command{
 	Use:   "new_server",
-	Short: "Create the dummy's server",
-	Long:  `Create the dummy's server for environment management.`,
+	Short: "Запустить сервер dummy для централизованного управления окружениями",
+	Long: `Запускает серверную часть dummy для централизованного хранения, выдачи и управления конфигурациями окружений.
+
+Позволяет администраторам и DevOps быстро развернуть backend для работы с конфигами, пользователями и сервисами. Поддерживает настройку порта запуска.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		port, _ := cmd.Flags().GetString("port")
 		if port == "" {

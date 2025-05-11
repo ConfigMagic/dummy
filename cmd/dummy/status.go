@@ -12,6 +12,9 @@ import (
 var statusCmd = &cobra.Command{
 	Use:   "status",
 	Short: "Показать текущее состояние окружения",
+	Long: `Показывает, что сейчас запущено и в каком статусе находятся сервисы.
+
+Удобно для быстрой диагностики и контроля состояния среды.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		mgr := environment.NewDockerComposeManager(configPath)
 		status, err := mgr.Status(context.Background())

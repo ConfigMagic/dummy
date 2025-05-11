@@ -11,7 +11,10 @@ import (
 
 var upCmd = &cobra.Command{
 	Use:   "up",
-	Short: "Запустить окружение",
+	Short: "Запустить окружение на основе выбранной конфигурации",
+	Long: `Запускает все необходимые сервисы и зависимости для локальной разработки по выбранному конфигу.
+
+Быстрый старт окружения, минимизируя ручные действия и ошибки.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		mgr := environment.NewDockerComposeManager(configPath)
 		err := mgr.Up(context.Background())

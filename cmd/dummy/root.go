@@ -34,4 +34,7 @@ func exitWithError(err error) {
 
 func init() {
 	rootCmd.AddCommand(completionCmd)
+	// Добавляем новые команды
+	rootCmd.AddCommand(reloadCmd)
+	rootCmd.AddCommand(statusCmd)
 }

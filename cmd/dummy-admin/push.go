@@ -46,19 +46,23 @@ var pushCmd = &cobra.Command{
 		}
 		io.Copy(w, yamlFile)
 
-		// Если есть папка с файлами — добавляем их
+		// Если есть папка с файлами — добавляем их в корень архива (без files/)
 		if fi, err := os.Stat(configDir); err == nil && fi.IsDir() {
 			filepath.Walk(configDir, func(path string, info os.FileInfo, err error) error {
 				if err != nil || info.IsDir() {
 					return nil
 				}
 				rel, _ := filepath.Rel(configDir, path)
+				// Не добавлять сам config.yaml второй раз
+				if rel == "" || rel == filepath.Base(configPath) {
+					return nil
+				}
 				f, err := os.Open(path)
 				if err != nil {
 					return nil
 				}
 				defer f.Close()
-				w, err := zipWriter.Create(filepath.Join("files", rel))
+				w, err := zipWriter.Create(rel)
 				if err != nil {
 					return nil
 				}

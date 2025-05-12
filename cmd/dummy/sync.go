@@ -6,6 +6,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -57,7 +58,15 @@ var syncCmd = &cobra.Command{
 		}
 
 		configYaml := fmt.Sprintf("data: |\n%s\n", indentYaml(result.Data))
-		filename := fmt.Sprintf("%s.yaml", configName)
+		homeDir, err := os.UserHomeDir()
+		if err != nil {
+			exitWithError(fmt.Errorf("не удалось определить домашний каталог: %v", err))
+		}
+		dummyDir := filepath.Join(homeDir, ".dummy")
+		if err := os.MkdirAll(dummyDir, 0755); err != nil {
+			exitWithError(fmt.Errorf("не удалось создать директорию ~/.dummy: %v", err))
+		}
+		filename := filepath.Join(dummyDir, fmt.Sprintf("%s.yaml", configName))
 		if err := os.WriteFile(filename, []byte(configYaml), 0644); err != nil {
 			exitWithError(fmt.Errorf("ошибка сохранения конфига: %v", err))
 		}

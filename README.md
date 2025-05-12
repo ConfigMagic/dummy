@@ -5,7 +5,7 @@
 ### Зависимости
 Перед началом убедитесь, что у вас установлен Go и настроено окружение для сборки Go-проектов.
 
-### Шаг 1: Установка бинарников
+### Установка бинарников
 
 Выполните следующие команды для сборки и установки бинарников `dummy` и `dummy-admin`:
 
@@ -23,63 +23,6 @@
     ```
     ✅ Installed dummy and dummy-admin to /usr/local/bin.
     ```
-
-### Шаг 2: Запуск сервера через `dummy-admin`
-
-После установки вы можете использовать инструмент `dummy-admin` для управления сервером. Для запуска сервера:
-
-1. Перейдите в корневую директорию проекта:
-    ```bash
-    cd /path/to/your/dummy
-    ```
-
-2. Обновите зависимости Go:
-    ```bash
-    cd server
-    go mod tidy
-    cd ..
-    ```
-
-3. Запустите сервер:
-    ```bash
-    export MONGO_URI="mongodb://localhost:27017"
-    export MONGO_DB="dummy"
-    export MONGO_CONFIGS_COLLECTION="configs"
-    sudo dummy-admin new_server
-    ```
-
-    В выводе будет:
-    ```
-    Server started on port 50051
-    ```
-
-### Возможные проблемы и их решения
-
-1. **Ошибка "no such file or directory"**:
-   Если вы видите ошибку вида:
-   ```
-   stat ./server/main/main.go: no such file or directory
-   ```
-   Это означает, что вы находитесь не в той директории. Убедитесь, что вы запускаете команду из корневой директории проекта.
-
-2. **Ошибки с пакетами Go**:
-   Если вы видите ошибки вида:
-   ```
-   package config_saver/internal/config is not in std
-   no required module provides package github.com/gin-gonic/gin
-   ```
-   Выполните следующие шаги:
-   ```bash
-   cd server
-   go mod tidy
-   cd ..
-   ```
-   Затем попробуйте запустить сервер снова.
-
-3. **Проблемы с правами доступа**:
-   Если возникают проблемы с правами доступа, убедитесь, что:
-   - Вы используете `sudo` для команд, требующих повышенных привилегий
-   - У вас есть права на запись в директорию проекта
 
 ## Как работает шаблон для сервера
 
@@ -184,3 +127,38 @@ dummy down -c examples/dev-bash.yaml
 ```bash
 dummy up -c examples/server.yaml
 ```
+
+## Структура директорий и правила именования окружений
+
+- **Пользовательский конфиг** (например, `examples/server.yaml`) должен лежать в директории `examples/`.
+- Для каждого окружения создаётся папка с тем же именем, что и конфиг без расширения (например, `examples/server/`).
+- В этой папке должны находиться:
+  - `runner.yaml` — основной runner-конфиг для окружения
+  - шаблоны (например, `docker-compose.tmpl`)
+- Путь к runner.yaml формируется как: `{директория user config}/{имя окружения}/runner.yaml`.
+  - Например, для `examples/server.yaml` runner ищет `examples/server/runner.yaml`.
+- Все шаблоны для окружения также должны лежать в этой папке (например, `examples/server/docker-compose.tmpl`).
+
+**Пример структуры:**
+
+```
+examples/
+  server.yaml
+  server/
+    runner.yaml
+    docker-compose.tmpl
+  dev-docker.yaml
+  dev-docker/
+    runner.yaml
+    docker-compose.tmpl
+  dev-bash.yaml
+  dev-bash/
+    runner.yaml
+    start.sh.tmpl
+    stop.sh.tmpl
+```
+
+> **Важно:**
+> - Имя папки окружения всегда совпадает с именем user config без `.yaml`.
+> - Все файлы runner и шаблоны должны лежать внутри этой папки.
+> - Если структура не соблюдена, запуск окружения завершится ошибкой поиска runner.yaml или шаблонов.

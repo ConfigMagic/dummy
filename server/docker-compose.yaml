@@ -1,0 +1,26 @@
+services:
+  config_saver:
+    container_name: config_saver
+    build: .
+    env_file: .env
+    environment:
+      - SERVER_PORT=${SERVER_PORT}
+      - MONGO_URI=${MONGO_URI}
+      - MONGO_DB=${MONGO_DB}
+      - MONGO_CONFIGS_COLLECTION=${MONGO_CONFIGS_COLLECTION}
+    depends_on:
+      - mongo
+    ports:
+      - "${SERVER_PORT}:${HOST_PORT}"
+
+  mongo:
+    container_name: mongo
+    image: mongo:8
+    env_file: .env
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_DB}
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

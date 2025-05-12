@@ -22,11 +22,25 @@ var downCmd = &cobra.Command{
 		if filepath.Ext(configName) == ".yaml" {
 			configName = configName[:len(configName)-5]
 		}
-		configBase := filepath.Dir(configName)
-		if configBase == "." {
-			configBase = "examples/" + filepath.Base(configName)
+		configDir := filepath.Dir(configPath)
+		baseName := filepath.Base(configName)
+		envDir := filepath.Join(configDir, baseName)
+		runnerPath := filepath.Join(envDir, "runner.yaml")
+
+		// Проверяем runner.yaml по основному пути, иначе ищем в ~/.dummy
+		if _, err := os.Stat(runnerPath); os.IsNotExist(err) {
+			homeDir, _ := os.UserHomeDir()
+			altEnvDir := filepath.Join(homeDir, ".dummy", baseName)
+			altRunnerPath := filepath.Join(altEnvDir, "runner.yaml")
+			if _, err := os.Stat(altRunnerPath); err == nil {
+				runnerPath = altRunnerPath
+				envDir = altEnvDir
+			} else {
+				fmt.Fprintf(os.Stderr, "runner.yaml не найден ни по основному пути, ни в ~/.dummy\n")
+				os.Exit(1)
+			}
 		}
-		runnerPath := filepath.Join(configBase, "runner.yaml")
+
 		cfg, err := runner.LoadRunnerConfig(runnerPath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Ошибка чтения runner.yaml: %v\n", err)
@@ -48,7 +62,7 @@ var downCmd = &cobra.Command{
 			}
 		}
 		// Запускаем down_command
-		if err := runner.RunDownCommand(cfg, env, configBase); err != nil {
+		if err := runner.RunDownCommand(cfg, env, envDir); err != nil {
 			fmt.Fprintf(os.Stderr, "Ошибка остановки runner: %v\n", err)
 			os.Exit(1)
 		}

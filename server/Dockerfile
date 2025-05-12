@@ -17,13 +17,13 @@ RUN go mod download
 
 COPY . .
 
-RUN go build -o config_saver -trimpath ./cmd/app/main.go
+RUN go build -o server -trimpath ./cmd/app/main.go
 
 FROM alpine:3.21.3
 
 WORKDIR /app
 
-COPY --from=builder /app/config_saver .
+COPY --from=builder /app/server .
 
 RUN addgroup appgroup && \
     adduser -S -D -H -G appgroup appuser
@@ -31,4 +31,4 @@ RUN addgroup appgroup && \
 RUN chown -R appuser:appgroup /app
 USER appuser
 
-CMD ["./config_saver"]
+CMD ["./server"]

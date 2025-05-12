@@ -13,8 +13,6 @@ services:
       - MONGO_DB=dummy
       - MONGO_CONFIGS_COLLECTION=configs
     command: ["/app/server"]
-    volumes:
-      - ../../server:/app
     depends_on:
       - mongodb
 

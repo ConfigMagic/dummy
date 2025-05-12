@@ -9,8 +9,11 @@ import (
 )
 
 func New() *zap.Logger {
-	// Создаем директорию для логов если её нет
-	logDir := "/var/log/dummy-admin"
+	// Получаем директорию для логов из переменной окружения или используем ./logs по умолчанию
+	logDir := os.Getenv("DUMMY_LOG_DIR")
+	if logDir == "" {
+		logDir = "./logs"
+	}
 	if err := os.MkdirAll(logDir, 0755); err != nil {
 		panic(err)
 	}

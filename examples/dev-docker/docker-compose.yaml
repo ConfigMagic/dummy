@@ -1,0 +1,7 @@
+version: '3'
+services:
+  hello:
+    image: busybox
+    command: ["sh", "-c", "echo Hello from Docker! && echo $TEST_ENV"]
+    environment:
+      - TEST_ENV=Привет из dummy!

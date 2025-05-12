@@ -128,6 +128,32 @@ dummy down -c examples/dev-bash.yaml
 dummy up -c examples/server.yaml
 ```
 
+## Быстрый старт: универсальный workflow
+
+1. **Админ** готовит шаблон окружения и runner.yaml в папке (например, `examples/dev-docker/`).
+2. **Админ** пушит окружение на сервер:
+   ```bash
+   dummy-admin push examples/dev-docker.yaml
+   ```
+   В архив попадут:
+   - сам YAML (config.yaml)
+   - все файлы из одноимённой папки (runner.yaml, шаблоны и т.д.)
+3. **Разработчик** синхронизирует окружение:
+   ```bash
+   dummy sync dev-docker
+   ```
+   Всё распакуется в `~/.dummy/dev-docker/` (config.yaml, runner.yaml, шаблоны и т.д.)
+4. **Разработчик** запускает окружение:
+   ```bash
+   dummy up -c ~/.dummy/dev-docker/config.yaml
+   ```
+   или, если работает из examples:
+   ```bash
+   dummy up -c examples/dev-docker.yaml
+   ```
+
+---
+
 ## Структура директорий и правила именования окружений
 
 - **Пользовательский конфиг** (например, `examples/server.yaml`) должен лежать в директории `examples/`.

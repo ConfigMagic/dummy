@@ -36,6 +36,10 @@ func main() {
 	r.GET("/config/:name", configHandler.GetConfig)
 	r.POST("/config/:name", configHandler.SaveConfig)
 	r.DELETE("/config/:name", configHandler.DeleteConfig)
+	// Новый роут для multipart push
+	r.POST("/config-multipart", configHandler.PushConfigMultipart)
+	// Новый роут для выдачи архива
+	r.GET("/config-multipart", configHandler.GetConfigArchive)
 
 	// Запуск сервера
 	log.Info("Server started", zap.String("port", cfg.Server.Port))

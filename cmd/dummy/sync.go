@@ -1,27 +1,15 @@
 package main
 
 import (
-	"encoding/json"
+	"archive/zip"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
-
-func indentYaml(data string) string {
-	if data == "" {
-		return ""
-	}
-	lines := strings.Split(data, "\n")
-	for i, line := range lines {
-		lines[i] = "  " + line
-	}
-	return strings.Join(lines, "\n")
-}
 
 var syncCmd = &cobra.Command{
 	Use:   "sync [название_конфига]",
@@ -37,7 +25,7 @@ var syncCmd = &cobra.Command{
 		if serverURL == "" {
 			serverURL = "http://localhost:8080"
 		}
-		url := fmt.Sprintf("%s/config/%s", serverURL, configName)
+		url := fmt.Sprintf("%s/config-multipart?name=%s", serverURL, configName)
 
 		resp, err := http.Get(url)
 		if err != nil {
@@ -50,29 +38,50 @@ var syncCmd = &cobra.Command{
 			exitWithError(fmt.Errorf("сервер вернул ошибку: %s", string(body)))
 		}
 
-		var result struct {
-			Data string `json:"data"`
+		// Сохраняем архив во временный файл
+		tmpZip := filepath.Join(os.TempDir(), configName+".zip")
+		f, err := os.Create(tmpZip)
+		if err != nil {
+			exitWithError(fmt.Errorf("ошибка создания временного файла: %v", err))
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-			exitWithError(fmt.Errorf("ошибка декодирования ответа: %v", err))
-		}
+		io.Copy(f, resp.Body)
+		f.Close()
 
-		configYaml := fmt.Sprintf("data: |\n%s\n", indentYaml(result.Data))
+		// Распаковываем архив в ~/.dummy/<configName>/
 		homeDir, err := os.UserHomeDir()
 		if err != nil {
 			exitWithError(fmt.Errorf("не удалось определить домашний каталог: %v", err))
 		}
-		dummyDir := filepath.Join(homeDir, ".dummy")
-		if err := os.MkdirAll(dummyDir, 0755); err != nil {
-			exitWithError(fmt.Errorf("не удалось создать директорию ~/.dummy: %v", err))
+		destDir := filepath.Join(homeDir, ".dummy", configName)
+		os.MkdirAll(destDir, 0755)
+		zipReader, err := zip.OpenReader(tmpZip)
+		if err != nil {
+			exitWithError(fmt.Errorf("ошибка открытия архива: %v", err))
 		}
-		filename := filepath.Join(dummyDir, fmt.Sprintf("%s.yaml", configName))
-		if err := os.WriteFile(filename, []byte(configYaml), 0644); err != nil {
-			exitWithError(fmt.Errorf("ошибка сохранения конфига: %v", err))
+		defer zipReader.Close()
+		for _, f := range zipReader.File {
+			fpath := filepath.Join(destDir, f.Name)
+			if f.FileInfo().IsDir() {
+				os.MkdirAll(fpath, f.Mode())
+				continue
+			}
+			os.MkdirAll(filepath.Dir(fpath), 0755)
+			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
+			if err != nil {
+				continue
+			}
+			inFile, err := f.Open()
+			if err != nil {
+				outFile.Close()
+				continue
+			}
+			io.Copy(outFile, inFile)
+			outFile.Close()
+			inFile.Close()
 		}
+		os.Remove(tmpZip)
 
-		fmt.Printf("✅ Конфиг '%s' загружен\n", configName)
-		fmt.Printf("Конфиг сохранён в файл: %s\n", filename)
+		fmt.Printf("✅ Конфиг '%s' (yaml+files) синхронизирован и распакован в %s\n", configName, destDir)
 	},
 }
 

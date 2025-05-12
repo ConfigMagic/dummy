@@ -1,14 +1,16 @@
 package main
 
 import (
+	"archive/zip"
+	"bytes"
 	"fmt"
 	"io"
+	"mime/multipart"
 	"net/http"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
-	"gopkg.in/yaml.v2"
 )
 
 var pushCmd = &cobra.Command{
@@ -21,38 +23,79 @@ var pushCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		configPath := args[0]
 
-		data, err := os.ReadFile(configPath)
-		if err != nil {
-			exitWithError(fmt.Errorf("ошибка чтения файла: %v", err))
+		// Имя конфига (без расширения)
+		name := filepath.Base(configPath)
+		if ext := filepath.Ext(name); ext == ".yaml" || ext == ".yml" {
+			name = name[:len(name)-len(ext)]
 		}
 
-		var config struct {
-			Name string `yaml:"name"`
-			Data string `yaml:"data"`
+		// Папка с файлами (рядом с ямлом, с тем же именем)
+		configDir := configPath[:len(configPath)-len(filepath.Ext(configPath))]
+		var buf bytes.Buffer
+		zipWriter := zip.NewWriter(&buf)
+
+		// Добавляем сам YAML
+		yamlFile, err := os.Open(configPath)
+		if err != nil {
+			exitWithError(fmt.Errorf("ошибка чтения yaml: %v", err))
 		}
-		if err := yaml.Unmarshal(data, &config); err != nil {
-			exitWithError(fmt.Errorf("ошибка парсинга YAML: %v", err))
+		defer yamlFile.Close()
+		w, err := zipWriter.Create("config.yaml")
+		if err != nil {
+			exitWithError(fmt.Errorf("ошибка zip: %v", err))
 		}
+		io.Copy(w, yamlFile)
+
+		// Если есть папка с файлами — добавляем их
+		if fi, err := os.Stat(configDir); err == nil && fi.IsDir() {
+			filepath.Walk(configDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil || info.IsDir() {
+					return nil
+				}
+				rel, _ := filepath.Rel(configDir, path)
+				f, err := os.Open(path)
+				if err != nil {
+					return nil
+				}
+				defer f.Close()
+				w, err := zipWriter.Create(filepath.Join("files", rel))
+				if err != nil {
+					return nil
+				}
+				io.Copy(w, f)
+				return nil
+			})
+		}
+		zipWriter.Close()
 
 		serverURL := os.Getenv("DUMMY_SERVER_URL")
 		if serverURL == "" {
 			serverURL = "http://localhost:8080"
 		}
+		url := serverURL + "/config-multipart"
 
-		url := serverURL + "/config"
-		jsonData := fmt.Sprintf(`{"name":"%s","data":%q}`, config.Name, config.Data)
-		resp, err := http.Post(url, "application/json", strings.NewReader(jsonData))
+		body := &bytes.Buffer{}
+		writer := multipart.NewWriter(body)
+		writer.WriteField("name", name)
+		fw, err := writer.CreateFormFile("archive", name+".zip")
+		if err != nil {
+			exitWithError(fmt.Errorf("ошибка multipart: %v", err))
+		}
+		fw.Write(buf.Bytes())
+		writer.Close()
+
+		resp, err := http.Post(url, writer.FormDataContentType(), body)
 		if err != nil {
 			exitWithError(fmt.Errorf("ошибка отправки POST: %v", err))
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != 200 {
-			body, _ := io.ReadAll(resp.Body)
-			exitWithError(fmt.Errorf("сервер вернул ошибку: %s", string(body)))
+			b, _ := io.ReadAll(resp.Body)
+			exitWithError(fmt.Errorf("сервер вернул ошибку: %s", string(b)))
 		}
 
-		fmt.Printf("✅ Конфиг '%s' успешно загружен на сервер\n", config.Name)
+		fmt.Printf("✅ Конфиг '%s' (yaml+files) успешно загружен на сервер\n", name)
 	},
 }
 

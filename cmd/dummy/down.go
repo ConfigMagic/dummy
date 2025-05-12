@@ -72,5 +72,5 @@ var downCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(downCmd)
-	downCmd.PersistentFlags().StringVar(&configPath, "config", "config.yaml", "Путь к конфигурационному файлу")
+	downCmd.PersistentFlags().StringVarP(&configPath, "config", "c", "config.yaml", "Путь к конфигурационному файлу")
 }
